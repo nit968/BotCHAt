@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvel Chatbot</title>
+    <!-- Link to External CSS (or you can embed it inside a <style> tag) -->
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <script>
+        let socket = new SockJS('/chat');
+        let stompClient = Stomp.over(socket);
+        let username = prompt("Enter your name:");
+
+        stompClient.connect({}, function (frame) {
+            stompClient.subscribe('/topic/messages', function (message) {
+                let messageBody = JSON.parse(message.body);
+                let chatBox = document.getElementById("chat-box");
+                let messageElement = document.createElement("div");
+                messageElement.classList.add("message");
+                messageElement.innerHTML = `<strong>${messageBody.username}: </strong>${messageBody.content}`;
+                chatBox.appendChild(messageElement);
+                chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the latest message
+            });
+
+            // Notify when user joins
+            stompClient.send("/app/join", {}, JSON.stringify({username: username, content: username + " has joined the chat."}));
+        });
+
+        function sendMessage() {
+            let message = document.getElementById("message").value;
+            stompClient.send("/app/chat", {}, JSON.stringify({username: username, content: message}));
+            document.getElementById("message").value = "";
+        }
+
+        function leaveChat() {
+            stompClient.send("/app/leave", {}, JSON.stringify({username: username, content: username + " has left the chat."}));
+            window.location.reload();  // Reload to end chat session
+        }
+    </script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Marvel Chatbot</h1>
+        </div>
+        <div id="chat-box" class="chat-box">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="message" placeholder="Type your message" class="chat-input">
+            <button onclick="sendMessage()" class="chat-button">Send</button>
+            <button onclick="leaveChat()" class="chat-button leave-button">Leave</button>
+        </div>
+    </div>
+</body>
+</html>
