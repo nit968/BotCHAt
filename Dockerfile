@@ -11,8 +11,8 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17.0.1-jdk-slim
 
 # Copy the JAR file from the build stage
-# Ensure that the correct path is used (target/demo-0.0.1-SNAPSHOT.jar)
-COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar demo.jar
+# The correct path should be /root/target/demo-0.0.1-SNAPSHOT.jar
+COPY --from=build /root/target/demo-0.0.1-SNAPSHOT.jar demo.jar
 
 # Expose the port your application will run on
 EXPOSE 8080
